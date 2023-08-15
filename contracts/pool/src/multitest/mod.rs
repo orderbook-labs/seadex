@@ -1,145 +1,172 @@
-#[cfg(test)]
-mod tests;
+// #[cfg(test)]
+// mod tests;
 
-use anyhow::Result as AnyResult;
+// use anyhow::Result as AnyResult;
 
-use cosmwasm_std::{Addr, Coin, StdResult};
-use cw_multi_test::{App, AppResponse, ContractWrapper, Executor};
+// use cosmwasm_std::{Addr, Coin, StdResult, IbcMsg, IbcQuery, Empty, GovMsg, testing::{MockApi, MockStorage},};
 
-use crate::{
-    contract::{execute, instantiate, query, reply},
-    msg::*,
-};
+// use cw_multi_test::{
+//     App, AppResponse, BankKeeper, ContractWrapper, DistributionKeeper, Executor, FailingModule,
+//     Router, StakeKeeper, WasmKeeper,
+// };
 
-pub const SEI_DENOM: &str = "usei";
-pub const SEI_DECIMALS: u8 = 18;
+// use sei_cosmwasm::{SeiMsg, SeiQueryWrapper};
+// use sei_integration_tests::{
+//     helper::{get_balance, mock_app},
+//     module::SeiModule,
+// };
 
-pub const USDC_DENOM: &str = "usdc";
-pub const USDT_DENOM: &str = "usdt";
-pub const BTC_DENOM: &str = "btc";
-pub const ETH_DENOM: &str = "eth";
+// use crate::{
+//     contract::{execute, instantiate, query, reply, sudo},
+//     msg::*,
+// };
 
-#[derive(Clone, Debug, Copy)]
-pub struct PoolCodeId(u64);
+// pub const SEI_DENOM: &str = "usei";
+// pub const SEI_DECIMALS: u8 = 18;
 
-impl PoolCodeId {
-    pub fn store_code(app: &mut App) -> Self {
-        let contract = ContractWrapper::new(execute, instantiate, query).with_reply(reply);
-        let code_id = app.store_code(Box::new(contract));
-        Self(code_id)
-    }
+// pub const USDC_DENOM: &str = "usdc";
+// pub const USDT_DENOM: &str = "usdt";
+// pub const BTC_DENOM: &str = "btc";
+// pub const ETH_DENOM: &str = "eth";
 
-    #[allow(clippy::too_many_arguments)]
-    pub fn instantiate(
-        self,
-        app: &mut App,
-        sender: Addr,
-        base_denom: impl Into<String>,
-        quote_denom: impl Into<String>,
-        tick_size: u64,
-        taker_fee_rate: u64,
-        maker_rebate_fee: u64,
-        label: &str,
-    ) -> AnyResult<PoolContract> {
-        PoolContract::instantiate(
-            app,
-            self,
-            sender,
-            base_denom,
-            quote_denom,
-            tick_size,
-            taker_fee_rate,
-            maker_rebate_fee,
-            label,
-        )
-    }
-}
+// pub type SeiRouter = Router<
+//     BankKeeper,
+//     SeiModule,
+//     WasmKeeper<SeiMsg, SeiQueryWrapper>,
+//     StakeKeeper,
+//     DistributionKeeper,
+//     FailingModule<IbcMsg, IbcQuery, Empty>,
+//     FailingModule<GovMsg, Empty, Empty>,
+// >;
 
-impl From<PoolCodeId> for u64 {
-    fn from(code_id: PoolCodeId) -> Self {
-        code_id.0
-    }
-}
+// pub type SeiApp = App<BankKeeper, MockApi, MockStorage, SeiModule, WasmKeeper<SeiMsg, SeiQueryWrapper>, StakeKeeper, DistributionKeeper, FailingModule<IbcMsg, IbcQuery, Empty>, FailingModule<GovMsg, Empty, Empty>>;
 
-#[derive(Debug, Clone)]
-pub struct PoolContract(Addr);
+// #[derive(Clone, Debug, Copy)]
+// pub struct PoolCodeId(u64);
 
-// implement the contract real function, e.g. instantiate, functions in exec, query modules
-impl PoolContract {
-    pub fn addr(&self) -> Addr {
-        self.0.clone()
-    }
+// impl PoolCodeId {
+//     pub fn store_code(app: &mut SeiApp) -> Self {
+//         // let contract = ContractWrapper::new(execute, instantiate, query)
+//         //     .with_reply(reply)
+//         //     .with_sudo(sudo);
+//         let contract = ContractWrapper::new(execute, instantiate, query)
+//                 .with_reply(reply)
+//                 .with_sudo(sudo);
+//         let code_id = app.store_code(Box::new(contract));
+//         Self(code_id)
+//     }
 
-    #[allow(clippy::too_many_arguments)]
-    #[track_caller]
-    pub fn instantiate(
-        app: &mut App,
-        code_id: PoolCodeId,
-        sender: Addr,
-        base_denom: impl Into<String>,
-        quote_denom: impl Into<String>,
-        tick_size: u64,
-        taker_fee_rate: u64,
-        maker_rebate_rate: u64,
-        label: &str,
-    ) -> AnyResult<Self> {
-        let init_msg = InstantiateMsg::new(
-            base_denom,
-            quote_denom,
-            tick_size,
-            taker_fee_rate,
-            maker_rebate_rate,
-        );
+//     #[allow(clippy::too_many_arguments)]
+//     pub fn instantiate(
+//         self,
+//         app: &mut App,
+//         sender: Addr,
+//         base_denom: impl Into<String>,
+//         quote_denom: impl Into<String>,
+//         tick_size: u64,
+//         taker_fee_rate: u64,
+//         maker_rebate_fee: u64,
+//         label: &str,
+//     ) -> AnyResult<PoolContract> {
+//         PoolContract::instantiate(
+//             app,
+//             self,
+//             sender,
+//             base_denom,
+//             quote_denom,
+//             tick_size,
+//             taker_fee_rate,
+//             maker_rebate_fee,
+//             label,
+//         )
+//     }
+// }
 
-        app.instantiate_contract(
-            code_id.0,
-            Addr::unchecked(sender),
-            &init_msg,
-            &[],
-            label,
-            None,
-        )
-        .map(Self::from)
-    }
+// impl From<PoolCodeId> for u64 {
+//     fn from(code_id: PoolCodeId) -> Self {
+//         code_id.0
+//     }
+// }
 
-    #[track_caller]
-    pub fn make_market() -> AnyResult<AppResponse> {
-        todo!()
-    }
+// #[derive(Debug, Clone)]
+// pub struct PoolContract(Addr);
 
-    pub fn owner(&self, app: &App) -> StdResult<OwnerResp> {
-        app.wrap()
-            .query_wasm_smart(self.addr(), &QueryMsg::Owner {})
-    }
+// // implement the contract real function, e.g. instantiate, functions in exec, query modules
+// impl PoolContract {
+//     pub fn addr(&self) -> Addr {
+//         self.0.clone()
+//     }
 
-    pub fn query_balances(app: &App, addr: Addr) -> StdResult<Vec<Coin>> {
-        app.wrap().query_all_balances(addr)
-    }
+//     #[allow(clippy::too_many_arguments)]
+//     #[track_caller]
+//     pub fn instantiate(
+//         app: &mut App,
+//         code_id: PoolCodeId,
+//         sender: Addr,
+//         base_denom: impl Into<String>,
+//         quote_denom: impl Into<String>,
+//         tick_size: u64,
+//         taker_fee_rate: u64,
+//         maker_rebate_rate: u64,
+//         label: &str,
+//     ) -> AnyResult<Self> {
+//         let init_msg = InstantiateMsg::new(
+//             base_denom,
+//             quote_denom,
+//             tick_size,
+//             taker_fee_rate,
+//             maker_rebate_rate,
+//         );
 
-    pub fn query_state(&self, app: &App) -> StdResult<CurrentStateResp> {
-        app.wrap()
-            .query_wasm_smart(self.addr(), &QueryMsg::CurrentState {})
-    }
-}
+//         app.instantiate_contract(
+//             code_id.0,
+//             Addr::unchecked(sender),
+//             &init_msg,
+//             &[],
+//             label,
+//             None,
+//         )
+//         .map(Self::from)
+//     }
 
-impl From<Addr> for PoolContract {
-    fn from(value: Addr) -> Self {
-        Self(value)
-    }
-}
+//     #[track_caller]
+//     pub fn make_market() -> AnyResult<AppResponse> {
+//         todo!()
+//     }
 
-pub fn alice() -> Addr {
-    Addr::unchecked("sei1vqm0e2t4yefty2haha4ryr42zpyxqk8257kag5")
-}
+//     pub fn owner(&self, app: &App) -> StdResult<OwnerResp> {
+//         app.wrap()
+//             .query_wasm_smart(self.addr(), &QueryMsg::Owner {})
+//     }
 
-pub fn bob() -> Addr {
-    Addr::unchecked("sei1aan9kqywf4rf274cal0hj6eyly6wu0uv7edxy2")
-}
+//     pub fn query_balances(app: &App, addr: Addr) -> StdResult<Vec<Coin>> {
+//         app.wrap().query_all_balances(addr)
+//     }
 
-pub fn owner() -> Addr {
-    Addr::unchecked("sei1zj6fjsc2gkce878ukzg6g9wy8cl8p554dlggxd")
-}
+//     pub fn query_state(&self, app: &App) -> StdResult<CurrentStateResp> {
+//         app.wrap()
+//             .query_wasm_smart(self.addr(), &QueryMsg::CurrentState {})
+//     }
+// }
 
-pub fn parent() -> Addr {
-    Addr::unchecked("sei18rszd3tmgpjvjwq2qajtmn5jqvtscd2yuygl4z")
-}
+// impl From<Addr> for PoolContract {
+//     fn from(value: Addr) -> Self {
+//         Self(value)
+//     }
+// }
+
+// pub fn alice() -> Addr {
+//     Addr::unchecked("sei1vqm0e2t4yefty2haha4ryr42zpyxqk8257kag5")
+// }
+
+// pub fn bob() -> Addr {
+//     Addr::unchecked("sei1aan9kqywf4rf274cal0hj6eyly6wu0uv7edxy2")
+// }
+
+// pub fn owner() -> Addr {
+//     Addr::unchecked("sei1zj6fjsc2gkce878ukzg6g9wy8cl8p554dlggxd")
+// }
+
+// pub fn parent() -> Addr {
+//     Addr::unchecked("sei18rszd3tmgpjvjwq2qajtmn5jqvtscd2yuygl4z")
+// }

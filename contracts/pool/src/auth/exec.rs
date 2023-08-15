@@ -39,3 +39,15 @@ pub fn validate_balance(balance: &Coin, to_withdraw: u128) -> UnitResult {
     );
     Ok(())
 }
+
+pub fn validate_position_effect(position_effect: &str) -> UnitResult {
+    let position_effect = position_effect.trim().to_lowercase();
+    let position_effect = position_effect.as_str();
+    ensure!(
+        position_effect == "open" || position_effect == "close" || position_effect == "unknown",
+        ContractError::InvalidPositionEffect {
+            position_effect: position_effect.into(),
+        }
+    );
+    Ok(())
+}

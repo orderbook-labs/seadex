@@ -1,6 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
+use sei_cosmwasm::Order;
 
 #[cw_serde]
 pub struct State {
@@ -43,7 +44,7 @@ pub struct Bid {}
 
 pub struct Ask {}
 
-pub struct Order {}
+// pub struct Order {}
 
 /// State Storage
 pub const OWNER: Item<Addr> = Item::new("owner");

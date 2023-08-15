@@ -56,6 +56,12 @@ pub enum ContractError {
     #[error("{value} is not a valid  category")]
     InvalidCategory { value: String },
 
+    #[error("Invalid position effect: {position_effect}")]
+    InvalidPositionEffect { position_effect: String },
+
+    #[error("Unrecognized reply id: {id}")]
+    UnRecognizedReplyId { id: u64 },
+
     #[error("Allowance is expired")]
     Expired {},
 
@@ -69,23 +75,23 @@ pub enum ContractError {
     DuplicateInitialBalanceAddresses {},
 }
 
-impl From<cw20_base::ContractError> for ContractError {
-    fn from(err: cw20_base::ContractError) -> Self {
-        use cw20_base::ContractError::*;
+// impl From<cw20_base::ContractError> for ContractError {
+//     fn from(err: cw20_base::ContractError) -> Self {
+//         use cw20_base::ContractError::*;
 
-        match err {
-            Std(error) => ContractError::Std(error),
-            Unauthorized {} => ContractError::Unauthorized {},
-            CannotSetOwnAccount {} => ContractError::CannotSetOwnAccount {},
-            InvalidExpiration {} => ContractError::InvalidExpiration {},
-            // InvalidZeroAmount {  }
-            Expired {} => ContractError::Expired {},
-            NoAllowance {} => ContractError::NoAllowance {},
-            CannotExceedCap {} => ContractError::CannotExceedCap {},
-            DuplicateInitialBalanceAddresses {} => {
-                ContractError::DuplicateInitialBalanceAddresses {}
-            }
-            _ => ContractError::Std(StdError::generic_err(err.to_string())),
-        }
-    }
-}
+//         match err {
+//             Std(error) => ContractError::Std(error),
+//             Unauthorized {} => ContractError::Unauthorized {},
+//             CannotSetOwnAccount {} => ContractError::CannotSetOwnAccount {},
+//             InvalidExpiration {} => ContractError::InvalidExpiration {},
+//             // InvalidZeroAmount {  }
+//             Expired {} => ContractError::Expired {},
+//             NoAllowance {} => ContractError::NoAllowance {},
+//             CannotExceedCap {} => ContractError::CannotExceedCap {},
+//             DuplicateInitialBalanceAddresses {} => {
+//                 ContractError::DuplicateInitialBalanceAddresses {}
+//             }
+//             _ => ContractError::Std(StdError::generic_err(err.to_string())),
+//         }
+//     }
+// }

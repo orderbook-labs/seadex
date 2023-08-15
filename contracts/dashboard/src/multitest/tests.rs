@@ -3,7 +3,7 @@ mod test {
     use cw_multi_test::App;
     use pool::multitest::{PoolCodeId, SEI_DENOM, USDT_DENOM};
 
-    use crate::multitest::{owner, DashboardCodeId, DashboardContract};
+    // use crate::multitest::{alice, bob, owner, DashboardCodeId, DashboardContract};
 
     #[test]
     fn dashboard_instantiate_should_works() {

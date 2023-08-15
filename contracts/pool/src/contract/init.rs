@@ -1,12 +1,12 @@
 use cosmwasm_std::{attr, DepsMut, Env, MessageInfo, Response};
 use cw2::set_contract_version;
 
-use crate::{error::ContractError, msg::InstantiateMsg};
+use crate::{error::ContractError, msg::InstantiateMsg, QuerierWrapper};
 
 use super::{CONTRACT_NAME, CONTRACT_VERSION};
 
 pub fn instantiate(
-    deps: DepsMut,
+    deps: DepsMut<QuerierWrapper>,
     _env: Env,
     info: MessageInfo,
     _msg: InstantiateMsg,
