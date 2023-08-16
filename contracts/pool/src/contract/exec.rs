@@ -1,17 +1,22 @@
-use cosmwasm_std::{Decimal, DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{Decimal, DepsMut, Env, MessageInfo, Response, SubMsg};
+use cw_storage_plus::Item;
 use sei_cosmwasm::{OrderType, PositionDirection, SeiMsg};
 
 use crate::{
-    auth::exec::validate_position_effect, msg::ExecuteMsg, ContractError, Order, OrderData,
-    QuerierWrapper,
+    auth::exec::validate_position_effect,
+    msg::ExecuteMsg,
+    state::{State, STATE},
+    ContractError, Order, OrderData, QuerierWrapper,
 };
+
+use super::PLACE_ORDER_REPLY_ID;
 
 pub fn execute(
     deps: DepsMut<QuerierWrapper>,
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     use ExecuteMsg::*;
 
     match msg {
@@ -20,8 +25,6 @@ pub fn execute(
         LimitBid {
             price,
             quantity,
-            price_denom,
-            asset_denom,
             leverage,
             position_effect,
             status_description,
@@ -32,12 +35,11 @@ pub fn execute(
             &info,
             price,
             quantity,
-            &price_denom,
-            &asset_denom,
             leverage,
             &position_effect,
             &status_description,
             nominal,
+            STATE,
         ),
         MarketBid {} => market_bid(deps, &env, &info),
         MakeMarket {} => make_market(deps, &env, &info),
@@ -51,7 +53,7 @@ fn limit_ask(
     _deps: DepsMut<QuerierWrapper>,
     _env: &Env,
     _info: &MessageInfo,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     Ok(Response::default())
 }
 
@@ -59,24 +61,28 @@ fn market_ask(
     _deps: DepsMut<QuerierWrapper>,
     _env: &Env,
     _info: &MessageInfo,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     Ok(Response::default())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn limit_bid(
     deps: DepsMut<QuerierWrapper>,
-    env: &Env,
+    _env: &Env,
     info: &MessageInfo,
     price: u128,
     quantity: u128,
-    price_denom: &str,
-    asset_denom: &str,
     leverage: u128,
     position_effect: &str,
     status_description: &str,
     nominal: u128,
-) -> Result<Response, ContractError> {
-    validate_position_effect(&position_effect)?;
+    state: Item<State>,
+) -> Result<Response<SeiMsg>, ContractError> {
+    validate_position_effect(position_effect)?;
+
+    let state = state.load(deps.storage)?;
+    let price_denom = &state.price_denom;
+    let asset_denom = &state.asset_denom;
 
     let order_data = OrderData {
         leverage: Decimal::raw(leverage),
@@ -100,7 +106,7 @@ fn limit_bid(
     let funds = info
         .funds
         .iter()
-        .filter(|fund| fund.denom == price_denom)
+        .filter(|fund| fund.denom == state.price_denom)
         .cloned()
         .collect();
 
@@ -112,14 +118,18 @@ fn limit_bid(
             .addr_validate("sei14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sh9m79m")?,
     };
 
-    Ok(Response::default())
+    let sub_msg = SubMsg::reply_on_success(order_msg, PLACE_ORDER_REPLY_ID);
+
+    let resp = Response::new().add_submessage(sub_msg);
+
+    Ok(resp)
 }
 
 fn market_bid(
     _deps: DepsMut<QuerierWrapper>,
     _env: &Env,
     _info: &MessageInfo,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     Ok(Response::default())
 }
 
@@ -127,7 +137,7 @@ fn make_market(
     _deps: DepsMut<QuerierWrapper>,
     _env: &Env,
     _info: &MessageInfo,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     Ok(Response::default())
 }
 
@@ -136,7 +146,7 @@ fn cancel_order(
     _env: &Env,
     _info: &MessageInfo,
     _order_id: u128,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     Ok(Response::default())
 }
 
@@ -144,7 +154,7 @@ fn cancel_all_orders(
     _deps: DepsMut<QuerierWrapper>,
     _env: &Env,
     _info: &MessageInfo,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     Ok(Response::default())
 }
 
@@ -152,6 +162,6 @@ fn freeze(
     _deps: DepsMut<QuerierWrapper>,
     _env: &Env,
     _info: &MessageInfo,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     Ok(Response::default())
 }

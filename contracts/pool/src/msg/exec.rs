@@ -10,8 +10,8 @@ pub enum ExecuteMsg {
     LimitBid {
         price: u128,
         quantity: u128,
-        price_denom: String,
-        asset_denom: String,
+        // price_denom: String,
+        // asset_denom: String,
         leverage: u128,
         position_effect: String, // Open, Close or Unknown
         status_description: String,

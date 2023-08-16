@@ -4,9 +4,9 @@ use crate::{state::State, ContractError};
 
 pub type UnitResult = Result<(), ContractError>;
 
-pub fn validate_base_denom(state: &State, denom: &str) -> UnitResult {
+pub fn validate_price_denom(state: &State, denom: &str) -> UnitResult {
     ensure!(
-        denom == state.base_denom,
+        denom == state.price_denom,
         ContractError::UnSupportedDenom {
             denom: denom.into(),
         }
@@ -14,9 +14,9 @@ pub fn validate_base_denom(state: &State, denom: &str) -> UnitResult {
     Ok(())
 }
 
-pub fn validate_quote_denom(state: &State, denom: &str) -> UnitResult {
+pub fn validate_asset_denom(state: &State, denom: &str) -> UnitResult {
     ensure!(
-        denom == state.quote_denom,
+        denom == state.asset_denom,
         ContractError::UnSupportedDenom {
             denom: denom.into(),
         }

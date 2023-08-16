@@ -26,7 +26,7 @@ pub fn instantiate(
     env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     init::instantiate(deps, env, info, msg)
 }
 
@@ -36,7 +36,7 @@ pub fn execute(
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     exec::execute(deps, env, info, msg)
 }
 
@@ -50,7 +50,7 @@ pub fn reply(
     deps: DepsMut<QuerierWrapper>,
     env: Env,
     reply: Reply,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     reply::reply(deps, env, reply)
 }
 

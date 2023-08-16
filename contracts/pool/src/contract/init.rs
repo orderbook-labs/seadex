@@ -1,5 +1,6 @@
 use cosmwasm_std::{attr, DepsMut, Env, MessageInfo, Response};
 use cw2::set_contract_version;
+use sei_cosmwasm::SeiMsg;
 
 use crate::{error::ContractError, msg::InstantiateMsg, QuerierWrapper};
 
@@ -10,7 +11,7 @@ pub fn instantiate(
     _env: Env,
     info: MessageInfo,
     _msg: InstantiateMsg,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     let sender = &info.sender;

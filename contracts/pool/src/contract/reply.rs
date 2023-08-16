@@ -1,6 +1,6 @@
 use cosmwasm_std::{DepsMut, Env, Reply, Response, StdError, SubMsgResponse};
 use protobuf::Message;
-use sei_cosmwasm::{MsgPlaceOrdersResponse, SeiQueryWrapper};
+use sei_cosmwasm::{MsgPlaceOrdersResponse, SeiMsg, SeiQueryWrapper};
 
 use crate::ContractError;
 
@@ -10,7 +10,7 @@ pub fn reply(
     deps: DepsMut<SeiQueryWrapper>,
     env: Env,
     reply: Reply,
-) -> Result<Response, ContractError> {
+) -> Result<Response<SeiMsg>, ContractError> {
     match reply.id {
         PLACE_ORDER_REPLY_ID => Ok(handle_place_order_reply(deps, reply)?),
         id => Err(ContractError::UnRecognizedReplyId { id }),
@@ -20,7 +20,7 @@ pub fn reply(
 pub fn handle_place_order_reply(
     deps: DepsMut<SeiQueryWrapper>,
     reply: Reply,
-) -> Result<Response, StdError> {
+) -> Result<Response<SeiMsg>, StdError> {
     let submsg_response: SubMsgResponse =
         reply.result.into_result().map_err(StdError::generic_err)?;
 
