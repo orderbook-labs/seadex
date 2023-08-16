@@ -12,10 +12,6 @@ pub enum ExecuteMsg {
         maker_rebate_rate: u64,
         label: String,
     },
-    // Who can freeze pool when the pool happen some problems
-    FreezePool {
-        lottery: String,
-    },
 }
 
 #[cw_serde]

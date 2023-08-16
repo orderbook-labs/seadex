@@ -1,12 +1,12 @@
-use cosmwasm_std::{Decimal, DepsMut, Env, MessageInfo, Response, SubMsg};
-use cw_storage_plus::Item;
+use cosmwasm_std::{Decimal, DepsMut, Env, MessageInfo, Response, StdResult, SubMsg};
+use cw_storage_plus::{Item, Map};
 use sei_cosmwasm::{OrderType, PositionDirection, SeiMsg};
 
 use crate::{
     auth::exec::{validate_owner, validate_position_effect},
     msg::ExecuteMsg,
-    state::{State, OWNER, STATE},
-    ContractError, OrderData, SeiOrder, SeiQueryWrapper,
+    state::{State, BIDS, BID_ID, OWNER, PLACE_ORDERS, STATE},
+    ContractError, Order, OrderData, SeiOrder, SeiQueryWrapper,
 };
 
 use super::PLACE_ORDER_REPLY_ID;
@@ -40,6 +40,9 @@ pub fn execute(
             &status_description,
             nominal,
             STATE,
+            BID_ID,
+            BIDS,
+            PLACE_ORDERS,
         ),
         MarketBid {} => market_bid(deps, &env, &info),
         MakeMarket {} => make_market(deps, &env, &info),
@@ -67,7 +70,7 @@ fn market_ask(
 #[allow(clippy::too_many_arguments)]
 fn limit_bid(
     deps: DepsMut<SeiQueryWrapper>,
-    _env: &Env,
+    env: &Env,
     info: &MessageInfo,
     price: u128,
     quantity: u128,
@@ -75,11 +78,14 @@ fn limit_bid(
     position_effect: &str,
     status_description: &str,
     nominal: u128,
-    state: Item<State>,
+    state_item: Item<State>,
+    bid_id_item: Item<u64>,
+    bids: Map<u128, Vec<Order>>,
+    place_orders: Map<u64, Order>,
 ) -> Result<Response<SeiMsg>, ContractError> {
     validate_position_effect(position_effect)?;
 
-    let state = state.load(deps.storage)?;
+    let state = state_item.load(deps.storage)?;
     let price_denom = &state.price_denom;
     let asset_denom = &state.asset_denom;
 
@@ -110,10 +116,28 @@ fn limit_bid(
         .collect();
 
     let order_msg = SeiMsg::PlaceOrders {
-        orders: vec![order],
+        orders: vec![order.clone()],
         funds,
         contract_address: state.dex_contract_addr,
     };
+
+    let bid_id = bid_id_item.load(deps.storage)?;
+
+    let create_time = env.block.time;
+    let order = Order {
+        id: bid_id,
+        order,
+        create_time,
+        owner: info.sender.clone(),
+    };
+
+    place_orders.save(deps.storage, bid_id, &order)?;
+    bid_id_item.save(deps.storage, &(bid_id + 1))?;
+    bids.update(deps.storage, price, |orders| -> StdResult<_> {
+        let mut orders = orders.unwrap_or_default();
+        orders.push(order);
+        Ok(orders)
+    })?;
 
     let sub_msg = SubMsg::reply_on_success(order_msg, PLACE_ORDER_REPLY_ID);
 

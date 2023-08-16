@@ -59,11 +59,12 @@ pub fn process_bulk_order_placements(
         Err(error) => panic!("Problem converting binary for order request: {:?}", error),
     };
 
-    let mut response: Response = Response::new();
-    response = response.set_data(binary);
+    let resp = Response::new().set_data(binary);
+
     deps.api
-        .debug(&format!("process_bulk_order_placements: {:?}", response));
-    return Ok(Response::new());
+        .debug(&format!("process_bulk_order_placements: {:?}", resp));
+
+    Ok(resp)
 }
 
 pub fn process_bulk_order_cancellations(
@@ -92,14 +93,15 @@ pub fn process_bulk_liquidation(
         Err(error) => panic!("Problem converting binary for order request: {:?}", error),
     };
 
-    let mut response: Response = Response::new();
-    response = response.set_data(binary);
+    let resp = Response::new().set_data(binary);
+
     deps.api.debug(&format!(
         "pub fn process_bulk_liquidation(
             : {:?}",
-        response
+        resp
     ));
-    return Ok(Response::new());
+
+    Ok(resp)
 }
 
 pub fn process_finalize_block(
@@ -130,6 +132,5 @@ pub fn process_finalize_block(
         }
     }
 
-    let response = Response::new();
-    Ok(response)
+    Ok(Response::new())
 }

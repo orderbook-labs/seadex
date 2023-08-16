@@ -1,14 +1,9 @@
 use cosmwasm_std::{attr, to_binary, Addr, DepsMut, Env, MessageInfo, Response, SubMsg, WasmMsg};
 
-use pool::msg::ExecuteMsg as PoolExecuteMsg;
 use pool::msg::InstantiateMsg as PoolInstantiateMsg;
 
 use crate::state::{PoolInfo, PENDING_POOL};
-use crate::{
-    msg::ExecuteMsg,
-    state::{OWNER, STATE},
-    ContractError,
-};
+use crate::{msg::ExecuteMsg, state::STATE, ContractError};
 
 use super::CREATE_LOTTERY_REPLY_ID;
 
@@ -39,8 +34,6 @@ pub fn execute(
             maker_rebate_rate,
             &label,
         ),
-
-        FreezePool { lottery } => freeze_pool(deps, &env, &info, &lottery),
     }
 }
 
@@ -92,33 +85,4 @@ pub fn create_pool(
     PENDING_POOL.save(deps.storage, &pool)?;
 
     Ok(Response::new().add_submessage(msg).add_attributes(attrs))
-}
-
-pub fn freeze_pool(
-    deps: DepsMut,
-    _env: &Env,
-    info: &MessageInfo,
-    pool: &str,
-) -> Result<Response, ContractError> {
-    let sender = &info.sender;
-
-    let owner = OWNER.load(deps.storage)?;
-
-    if owner != sender {
-        return Err(ContractError::Unauthorized {});
-    }
-
-    let msg = PoolExecuteMsg::Freeze {};
-    let msg = WasmMsg::Execute {
-        contract_addr: pool.to_string(),
-        msg: to_binary(&msg)?,
-        funds: vec![],
-    };
-
-    let attrs = vec![
-        attr("action", "freeze_pool"),
-        attr("sender", info.sender.as_str()),
-    ];
-
-    Ok(Response::new().add_message(msg).add_attributes(attrs))
 }

@@ -1,7 +1,8 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Timestamp};
 use cw_storage_plus::{Item, Map};
-use sei_cosmwasm::Order;
+
+use crate::Order;
 
 #[cw_serde]
 pub struct State {
@@ -48,6 +49,11 @@ impl State {
 pub const OWNER: Item<Addr> = Item::new("owner");
 pub const STATE: Item<State> = Item::new("state");
 
-pub const BIDS: Map<u128, Vec<Order>> = Map::new("bid-orders");
-pub const ASKS: Map<u128, Vec<Order>> = Map::new("ask-orders");
-pub const FILLED: Map<u128, Vec<Order>> = Map::new("filled-orders");
+pub const BID_ID: Item<u64> = Item::new("bid-id");
+pub const ASK_ID: Item<u64> = Item::new("ask-id");
+
+pub const BIDS: Map<u128, Vec<Order>> = Map::new("bid-orders"); // key: price, (price, vec<Order>)
+pub const ASKS: Map<u128, Vec<Order>> = Map::new("ask-orders"); // key: price, (price, vec<Order>)
+
+pub const PLACE_ORDERS: Map<u64, Order> = Map::new("place-orders"); // (id, order)
+pub const FILLED: Map<u64, Order> = Map::new("filled-orders"); // (id, order)
