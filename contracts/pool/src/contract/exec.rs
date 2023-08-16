@@ -3,16 +3,16 @@ use cw_storage_plus::Item;
 use sei_cosmwasm::{OrderType, PositionDirection, SeiMsg};
 
 use crate::{
-    auth::exec::validate_position_effect,
+    auth::exec::{validate_owner, validate_position_effect},
     msg::ExecuteMsg,
-    state::{State, STATE},
-    ContractError, Order, OrderData, QuerierWrapper,
+    state::{State, OWNER, STATE},
+    ContractError, OrderData, SeiOrder, SeiQueryWrapper,
 };
 
 use super::PLACE_ORDER_REPLY_ID;
 
 pub fn execute(
-    deps: DepsMut<QuerierWrapper>,
+    deps: DepsMut<SeiQueryWrapper>,
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
@@ -43,14 +43,13 @@ pub fn execute(
         ),
         MarketBid {} => market_bid(deps, &env, &info),
         MakeMarket {} => make_market(deps, &env, &info),
-        CancelOrder { order_id } => cancel_order(deps, &env, &info, order_id),
-        CancelAllOrders {} => cancel_all_orders(deps, &env, &info),
-        Freeze {} => freeze(deps, &env, &info),
+        CancelOrders { order_ids } => cancel_order(deps, &env, &info, order_ids),
+        SetDexContract { addr } => set_dex_contract_addr(deps, &info, &addr, STATE),
     }
 }
 
 fn limit_ask(
-    _deps: DepsMut<QuerierWrapper>,
+    _deps: DepsMut<SeiQueryWrapper>,
     _env: &Env,
     _info: &MessageInfo,
 ) -> Result<Response<SeiMsg>, ContractError> {
@@ -58,7 +57,7 @@ fn limit_ask(
 }
 
 fn market_ask(
-    _deps: DepsMut<QuerierWrapper>,
+    _deps: DepsMut<SeiQueryWrapper>,
     _env: &Env,
     _info: &MessageInfo,
 ) -> Result<Response<SeiMsg>, ContractError> {
@@ -67,7 +66,7 @@ fn market_ask(
 
 #[allow(clippy::too_many_arguments)]
 fn limit_bid(
-    deps: DepsMut<QuerierWrapper>,
+    deps: DepsMut<SeiQueryWrapper>,
     _env: &Env,
     info: &MessageInfo,
     price: u128,
@@ -91,7 +90,7 @@ fn limit_bid(
 
     let data = serde_json::to_string(&order_data).unwrap();
 
-    let order = Order {
+    let order = SeiOrder {
         price: Decimal::raw(price),
         quantity: Decimal::raw(quantity),
         price_denom: price_denom.to_owned(),
@@ -113,9 +112,7 @@ fn limit_bid(
     let order_msg = SeiMsg::PlaceOrders {
         orders: vec![order],
         funds,
-        contract_address: deps
-            .api
-            .addr_validate("sei14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sh9m79m")?,
+        contract_address: state.dex_contract_addr,
     };
 
     let sub_msg = SubMsg::reply_on_success(order_msg, PLACE_ORDER_REPLY_ID);
@@ -126,7 +123,7 @@ fn limit_bid(
 }
 
 fn market_bid(
-    _deps: DepsMut<QuerierWrapper>,
+    _deps: DepsMut<SeiQueryWrapper>,
     _env: &Env,
     _info: &MessageInfo,
 ) -> Result<Response<SeiMsg>, ContractError> {
@@ -134,7 +131,7 @@ fn market_bid(
 }
 
 fn make_market(
-    _deps: DepsMut<QuerierWrapper>,
+    _deps: DepsMut<SeiQueryWrapper>,
     _env: &Env,
     _info: &MessageInfo,
 ) -> Result<Response<SeiMsg>, ContractError> {
@@ -142,26 +139,27 @@ fn make_market(
 }
 
 fn cancel_order(
-    _deps: DepsMut<QuerierWrapper>,
+    _deps: DepsMut<SeiQueryWrapper>,
     _env: &Env,
     _info: &MessageInfo,
-    _order_id: u128,
+    _order_ids: Vec<u64>,
 ) -> Result<Response<SeiMsg>, ContractError> {
     Ok(Response::default())
 }
 
-fn cancel_all_orders(
-    _deps: DepsMut<QuerierWrapper>,
-    _env: &Env,
-    _info: &MessageInfo,
+fn set_dex_contract_addr(
+    deps: DepsMut<SeiQueryWrapper>,
+    info: &MessageInfo,
+    addr: &str,
+    state: Item<State>,
 ) -> Result<Response<SeiMsg>, ContractError> {
-    Ok(Response::default())
-}
+    let owner = OWNER.load(deps.storage)?;
+    validate_owner(&owner, info)?;
 
-fn freeze(
-    _deps: DepsMut<QuerierWrapper>,
-    _env: &Env,
-    _info: &MessageInfo,
-) -> Result<Response<SeiMsg>, ContractError> {
+    state.update(deps.storage, |mut s| -> Result<State, ContractError> {
+        s.dex_contract_addr = deps.api.addr_validate(addr)?;
+        Ok(s)
+    })?;
+
     Ok(Response::default())
 }

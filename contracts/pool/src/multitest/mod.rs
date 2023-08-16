@@ -15,10 +15,8 @@ use cw_multi_test::{
 };
 
 use sei_cosmwasm::{SeiMsg, SeiQueryWrapper};
-use sei_integration_tests::{
-    helper::{get_balance, mock_app},
-    module::SeiModule,
-};
+
+use sei_integration_tests::module::SeiModule;
 
 use crate::{
     contract::{execute, instantiate, query, reply, sudo},
@@ -32,6 +30,7 @@ pub const USDC_DENOM: &str = "usdc";
 pub const USDT_DENOM: &str = "usdt";
 pub const BTC_DENOM: &str = "btc";
 pub const ETH_DENOM: &str = "eth";
+pub const ATOM_DENOM: &str = "uatom";
 
 pub type SeiRouter = Router<
     BankKeeper,
@@ -54,8 +53,6 @@ pub type SeiApp = App<
     FailingModule<IbcMsg, IbcQuery, Empty>,
     FailingModule<GovMsg, Empty, Empty>,
 >;
-
-pub const NATIVE_DENOM: &str = "usei";
 
 #[derive(Clone, Debug, Copy)]
 pub struct PoolCodeId(u64);
@@ -153,10 +150,6 @@ impl PoolContract {
             .query_wasm_smart(self.addr(), &QueryMsg::Owner {})
     }
 
-    pub fn query_balances(app: &SeiApp, addr: Addr) -> StdResult<Vec<Coin>> {
-        app.wrap().query_all_balances(addr)
-    }
-
     pub fn query_state(&self, app: &SeiApp) -> StdResult<CurrentStateResp> {
         app.wrap()
             .query_wasm_smart(self.addr(), &QueryMsg::CurrentState {})
@@ -177,7 +170,7 @@ pub fn bob() -> Addr {
     Addr::unchecked("sei1aan9kqywf4rf274cal0hj6eyly6wu0uv7edxy2")
 }
 
-pub fn owner() -> Addr {
+pub fn charlie() -> Addr {
     Addr::unchecked("sei1zj6fjsc2gkce878ukzg6g9wy8cl8p554dlggxd")
 }
 
@@ -191,7 +184,7 @@ pub fn init_default_balances(router: &mut SeiRouter, _api: &dyn Api, storage: &m
         .init_balance(
             storage,
             &admin(),
-            vec![coin(1_000_000_000_000_000, NATIVE_DENOM.to_string())],
+            vec![coin(1_000_000_000_000_000, SEI_DENOM.to_string())],
         )
         .unwrap();
 
@@ -201,8 +194,8 @@ pub fn init_default_balances(router: &mut SeiRouter, _api: &dyn Api, storage: &m
             storage,
             &alice(),
             vec![
-                coin(10_000_000, "usei".to_string()),
-                coin(10_000_000, "uatom".to_string()),
+                coin(10_000_000, SEI_DENOM.to_string()),
+                coin(10_000_000, ATOM_DENOM.to_string()),
             ],
         )
         .unwrap();
@@ -211,10 +204,10 @@ pub fn init_default_balances(router: &mut SeiRouter, _api: &dyn Api, storage: &m
         .bank
         .init_balance(
             storage,
-            &Addr::unchecked("bob"),
+            &bob(),
             vec![
-                coin(10_000_000, "usei".to_string()),
-                coin(10_000_000, "uatom".to_string()),
+                coin(10_000_000, SEI_DENOM.to_string()),
+                coin(10_000_000, ATOM_DENOM.to_string()),
             ],
         )
         .unwrap();
@@ -223,10 +216,10 @@ pub fn init_default_balances(router: &mut SeiRouter, _api: &dyn Api, storage: &m
         .bank
         .init_balance(
             storage,
-            &Addr::unchecked("charlie"),
+            &charlie(),
             vec![
-                coin(10_000_000, "usei".to_string()),
-                coin(10_000_000, "uatom".to_string()),
+                coin(10_000_000, SEI_DENOM.to_string()),
+                coin(10_000_000, ATOM_DENOM.to_string()),
             ],
         )
         .unwrap();
@@ -243,4 +236,8 @@ pub fn init_contract(
 ) -> Addr {
     app.instantiate_contract(code_id, sender, init_msg, send_funds, label, admin)
         .unwrap()
+}
+
+pub fn query_balances(app: &SeiApp, addr: Addr) -> StdResult<Vec<Coin>> {
+    app.wrap().query_all_balances(addr)
 }

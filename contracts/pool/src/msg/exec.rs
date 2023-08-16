@@ -21,11 +21,12 @@ pub enum ExecuteMsg {
     LimitAsk {},
     MarketAsk {},
     MakeMarket {},
-    CancelOrder {
-        order_id: u128,
+    CancelOrders {
+        order_ids: Vec<u64>,
     },
-    CancelAllOrders {},
-    Freeze {},
+    SetDexContract {
+        addr: String,
+    },
     // PlaceOrders {},
     // CancelOrders { order_ids: Vec<u64> },
     // CreateDenom {},

@@ -10,9 +10,8 @@ pub mod types;
 pub mod multitest;
 
 pub use crate::error::ContractError;
-use sei_cosmwasm::SeiQueryWrapper;
 pub use types::*;
 
-pub type Order = sei_cosmwasm::Order;
-pub type QuerierWrapper = SeiQueryWrapper;
+pub type SeiOrder = sei_cosmwasm::Order;
+pub type SeiQueryWrapper = sei_cosmwasm::SeiQueryWrapper;
 pub type SudoMsg = sei_cosmwasm::SudoMsg;

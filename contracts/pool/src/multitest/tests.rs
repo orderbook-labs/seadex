@@ -1,15 +1,13 @@
 #[cfg(test)]
 mod test {
 
-    use cosmwasm_std::coins;
-    use cw_multi_test::App;
-    use sei_integration_tests::helper::mock_app;
+    use cosmwasm_std::coin;
+    use sei_integration_tests::helper::{get_balance, mock_app};
 
     use crate::multitest::{
-        admin, alice, bob, init_default_balances, owner, PoolCodeId, PoolContract, SeiApp,
+        alice, bob, charlie, init_default_balances, query_balances, PoolCodeId, ATOM_DENOM,
         SEI_DENOM, USDT_DENOM,
     };
-    // use cw721_base::multi_tests;
 
     #[test]
     fn instantiate_should_works() {
@@ -26,7 +24,7 @@ mod test {
         let contract = code_id
             .instantiate(
                 &mut app,
-                owner(),
+                charlie(),
                 base_denom,
                 quote_denom,
                 tick_size,
@@ -36,32 +34,30 @@ mod test {
             )
             .unwrap();
 
-        let balances = PoolContract::query_balances(&app, contract.addr()).unwrap();
+        let balances = query_balances(&app, contract.addr()).unwrap();
         assert!(balances.is_empty());
 
-        let alice_balances = PoolContract::query_balances(&app, alice()).unwrap();
-        assert_eq!(alice_balances, coins(200, SEI_DENOM));
+        let alice_sei_balance = get_balance(&app, alice().to_string(), SEI_DENOM.to_owned());
+        assert_eq!(alice_sei_balance.amount, coin(10_000_000, SEI_DENOM));
+        let alice_atom_balance = get_balance(&app, alice().to_string(), ATOM_DENOM.to_owned());
+        assert_eq!(alice_atom_balance.amount, coin(10_000_000, ATOM_DENOM));
 
-        let bob_balances = PoolContract::query_balances(&app, bob()).unwrap();
-        assert_eq!(bob_balances, coins(500, SEI_DENOM));
+        let bob_sei_balance = get_balance(&app, bob().to_string(), SEI_DENOM.to_owned());
+        assert_eq!(bob_sei_balance.amount, coin(10_000_000, SEI_DENOM));
+        let bob_atom_balance = get_balance(&app, bob().to_string(), ATOM_DENOM.to_owned());
+        assert_eq!(bob_atom_balance.amount, coin(10_000_000, ATOM_DENOM));
 
-        let parent_balances = PoolContract::query_balances(&app, admin()).unwrap();
-        assert_eq!(parent_balances, coins(100, SEI_DENOM));
+        let owner = contract.owner(&app).unwrap();
+        assert_eq!(owner.owner, charlie());
+
+        let state = contract.query_state(&app).unwrap().state;
+        assert_eq!(state.next_bid_id, 0);
+        assert_eq!(state.next_ask_id, 0);
+        assert_eq!(state.tick_size, 1000);
     }
 
     #[test]
     fn swap_pool_full_flows_should_works() {
-        // Initialize
-        // let mut app = App::new(|router, _api, storage| {
-        //     router
-        //         .bank
-        //         .init_balance(storage, &alice(), coins(300, SEI_DENOM))
-        //         .unwrap();
-        //     router
-        //         .bank
-        //         .init_balance(storage, &bob(), coins(500, SEI_DENOM))
-        //         .unwrap();
-        // });
         let mut app = mock_app(init_default_balances, vec![]);
 
         let code_id = PoolCodeId::store_code(&mut app);
@@ -74,7 +70,7 @@ mod test {
         let contract = code_id
             .instantiate(
                 &mut app,
-                owner(),
+                charlie(),
                 base_denom,
                 quote_denom,
                 tick_size,
@@ -84,16 +80,17 @@ mod test {
             )
             .unwrap();
 
-        let balances = PoolContract::query_balances(&app, contract.addr()).unwrap();
+        let balances = query_balances(&app, contract.addr()).unwrap();
         assert!(balances.is_empty());
 
-        let alice_balances = PoolContract::query_balances(&app, alice()).unwrap();
-        assert_eq!(alice_balances, coins(200, SEI_DENOM));
+        let alice_sei_balance = get_balance(&app, alice().to_string(), SEI_DENOM.to_owned());
+        assert_eq!(alice_sei_balance.amount, coin(10_000_000, SEI_DENOM));
+        let alice_atom_balance = get_balance(&app, alice().to_string(), ATOM_DENOM.to_owned());
+        assert_eq!(alice_atom_balance.amount, coin(10_000_000, ATOM_DENOM));
 
-        let bob_balances = PoolContract::query_balances(&app, bob()).unwrap();
-        assert_eq!(bob_balances, coins(500, SEI_DENOM));
-
-        let parent_balances = PoolContract::query_balances(&app, admin()).unwrap();
-        assert_eq!(parent_balances, coins(100, SEI_DENOM));
+        let bob_sei_balance = get_balance(&app, bob().to_string(), SEI_DENOM.to_owned());
+        assert_eq!(bob_sei_balance.amount, coin(10_000_000, SEI_DENOM));
+        let bob_atom_balance = get_balance(&app, bob().to_string(), ATOM_DENOM.to_owned());
+        assert_eq!(bob_atom_balance.amount, coin(10_000_000, ATOM_DENOM));
     }
 }

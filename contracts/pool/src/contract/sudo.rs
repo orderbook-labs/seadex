@@ -4,7 +4,7 @@ use sei_cosmwasm::{
     LiquidationResponse, SeiMsg, SeiQueryWrapper, SettlementEntry,
 };
 
-use crate::{Order, SudoMsg};
+use crate::{SeiOrder, SudoMsg};
 
 pub fn sudo(
     deps: DepsMut<SeiQueryWrapper>,
@@ -43,7 +43,7 @@ pub fn handle_new_block(
 
 pub fn process_bulk_order_placements(
     deps: DepsMut<SeiQueryWrapper>,
-    _orders: Vec<Order>,
+    _orders: Vec<SeiOrder>,
     _deposits: Vec<DepositInfo>,
 ) -> Result<Response<SeiMsg>, StdError> {
     let response = BulkOrderPlacementsResponse {

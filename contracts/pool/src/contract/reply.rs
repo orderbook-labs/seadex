@@ -8,7 +8,7 @@ use super::PLACE_ORDER_REPLY_ID;
 
 pub fn reply(
     deps: DepsMut<SeiQueryWrapper>,
-    env: Env,
+    _env: Env,
     reply: Reply,
 ) -> Result<Response<SeiMsg>, ContractError> {
     match reply.id {
