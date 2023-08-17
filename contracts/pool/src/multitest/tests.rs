@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod test {
 
-    use cosmwasm_std::coin;
+    use cosmwasm_std::{coin, coins};
     use sei_integration_tests::helper::{get_balance, mock_app};
 
     use crate::multitest::{
@@ -61,8 +61,8 @@ mod test {
         let mut app = mock_app(init_default_balances, vec![]);
 
         let code_id = PoolCodeId::store_code(&mut app);
-        let base_denom = SEI_DENOM;
-        let quote_denom = USDT_DENOM;
+        let price_denom = SEI_DENOM;
+        let asset_denom = USDT_DENOM;
         let tick_size = 1000;
         let taker_fee_rate = 1;
         let maker_rebate_fee = 1;
@@ -71,8 +71,8 @@ mod test {
             .instantiate(
                 &mut app,
                 charlie(),
-                base_denom,
-                quote_denom,
+                price_denom,
+                asset_denom,
                 tick_size,
                 taker_fee_rate,
                 maker_rebate_fee,
@@ -92,5 +92,31 @@ mod test {
         assert_eq!(bob_sei_balance.amount, coin(10_000_000, SEI_DENOM));
         let bob_atom_balance = get_balance(&app, bob().to_string(), ATOM_DENOM.to_owned());
         assert_eq!(bob_atom_balance.amount, coin(10_000_000, ATOM_DENOM));
+
+        let price = 100u128;
+        let quantity = 100u128;
+        let leverage = 1u128;
+        let position_effect = "Open";
+        let status_description = "status_description";
+        let nominal = 1u128;
+        let funds = coins(10000, SEI_DENOM);
+
+        let resp = contract
+            .limit_bid(
+                &mut app,
+                &alice(),
+                price,
+                quantity,
+                leverage,
+                position_effect,
+                status_description,
+                nominal,
+                funds.as_slice(),
+            );
+        println!("resp: {:?}", resp);
+
+        let bids = contract.query_limit_bids(&app).unwrap().bids;
+        assert_eq!(bids.len(), 1);
+        
     }
 }

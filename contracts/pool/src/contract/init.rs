@@ -5,7 +5,7 @@ use sei_cosmwasm::SeiMsg;
 use crate::{
     error::ContractError,
     msg::InstantiateMsg,
-    state::{State, OWNER, STATE},
+    state::{State, OWNER, STATE, BID_ID, ASK_ID},
     SeiQueryWrapper,
 };
 
@@ -36,6 +36,8 @@ pub fn instantiate(
 
     STATE.save(deps.storage, &state)?;
     OWNER.save(deps.storage, sender)?;
+    BID_ID.save(deps.storage, &1)?;
+    ASK_ID.save(deps.storage, &1)?;
 
     let attrs = vec![
         attr("action", "instantiate"),

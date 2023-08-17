@@ -72,8 +72,8 @@ impl PoolCodeId {
         self,
         app: &mut SeiApp,
         sender: Addr,
-        base_denom: impl Into<String>,
-        quote_denom: impl Into<String>,
+        price_denom: impl Into<String>,
+        asset_denom: impl Into<String>,
         tick_size: u64,
         taker_fee_rate: u64,
         maker_rebate_fee: u64,
@@ -83,8 +83,8 @@ impl PoolCodeId {
             app,
             self,
             sender,
-            base_denom,
-            quote_denom,
+            price_denom,
+            asset_denom,
             tick_size,
             taker_fee_rate,
             maker_rebate_fee,
@@ -114,16 +114,16 @@ impl PoolContract {
         app: &mut SeiApp,
         code_id: PoolCodeId,
         sender: Addr,
-        base_denom: impl Into<String>,
-        quote_denom: impl Into<String>,
+        price_denom: impl Into<String>,
+        asset_denom: impl Into<String>,
         tick_size: u64,
         taker_fee_rate: u64,
         maker_rebate_fee: u64,
         label: &str,
     ) -> AnyResult<Self> {
         let init_msg = InstantiateMsg::new(
-            base_denom,
-            quote_denom,
+            price_denom,
+            asset_denom,
             tick_size,
             taker_fee_rate,
             maker_rebate_fee,
@@ -141,8 +141,32 @@ impl PoolContract {
     }
 
     #[track_caller]
-    pub fn make_market() -> AnyResult<AppResponse> {
-        todo!()
+    #[allow(clippy::too_many_arguments)]
+    pub fn limit_bid(
+        &self,
+        app: &mut SeiApp,
+        sender: &Addr,
+        price: u128,
+        quantity: u128,
+        leverage: u128,
+        position_effect: &str,
+        status_description: &str,
+        nominal: u128,
+        funds: &[Coin],
+    ) -> AnyResult<AppResponse> {
+        app.execute_contract(
+            sender.clone(),
+            self.addr(),
+            &ExecuteMsg::LimitBid {
+                price,
+                quantity,
+                leverage,
+                position_effect: position_effect.to_owned(),
+                status_description: status_description.to_owned(),
+                nominal,
+            },
+            funds,
+        )
     }
 
     pub fn owner(&self, app: &SeiApp) -> StdResult<OwnerResp> {
@@ -153,6 +177,11 @@ impl PoolContract {
     pub fn query_state(&self, app: &SeiApp) -> StdResult<CurrentStateResp> {
         app.wrap()
             .query_wasm_smart(self.addr(), &QueryMsg::CurrentState {})
+    }
+
+    pub fn query_limit_bids(&self, app: &SeiApp) -> StdResult<LimitBidsResp> {
+        app.wrap()
+            .query_wasm_smart(self.addr(), &QueryMsg::LimitBids {})
     }
 }
 
