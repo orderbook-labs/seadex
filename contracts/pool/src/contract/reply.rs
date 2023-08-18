@@ -22,7 +22,7 @@ pub fn handle_place_order_reply(
     reply: Reply,
 ) -> Result<Response<SeiMsg>, StdError> {
     println!("reply is: {:?}", reply);
-    
+
     let submsg_response: SubMsgResponse =
         reply.result.into_result().map_err(StdError::generic_err)?;
 

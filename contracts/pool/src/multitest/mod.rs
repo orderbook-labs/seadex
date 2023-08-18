@@ -6,7 +6,7 @@ use anyhow::Result as AnyResult;
 use cosmwasm_std::{
     coin,
     testing::{MockApi, MockStorage},
-    Addr, Api, Coin, Empty, GovMsg, IbcMsg, IbcQuery, StdResult, Storage,
+    Addr, Api, Coin, CosmosMsg, Empty, GovMsg, IbcMsg, IbcQuery, StdResult, Storage,
 };
 
 use cw_multi_test::{
@@ -21,6 +21,7 @@ use sei_integration_tests::module::SeiModule;
 use crate::{
     contract::{execute, instantiate, query, reply, sudo},
     msg::*,
+    SeiOrder,
 };
 
 pub const SEI_DENOM: &str = "usei";
@@ -269,4 +270,22 @@ pub fn init_contract(
 
 pub fn query_balances(app: &SeiApp, addr: Addr) -> StdResult<Vec<Coin>> {
     app.wrap().query_all_balances(addr)
+}
+
+#[track_caller]
+pub fn place_orders(
+    app: &mut SeiApp,
+    sender: &Addr,
+    orders: Vec<SeiOrder>,
+    funds: Vec<Coin>,
+    dex_contract_addr: &str,
+) -> AnyResult<Vec<AppResponse>> {
+    app.execute_multi(
+        sender.to_owned(),
+        vec![CosmosMsg::Custom(SeiMsg::PlaceOrders {
+            orders,
+            funds,
+            contract_address: Addr::unchecked(dex_contract_addr),
+        })],
+    )
 }

@@ -5,7 +5,7 @@ use sei_cosmwasm::SeiMsg;
 use crate::{
     error::ContractError,
     msg::InstantiateMsg,
-    state::{State, OWNER, STATE, BID_ID, ASK_ID},
+    state::{State, ASK_ID, BID_ID, OWNER, STATE},
     SeiQueryWrapper,
 };
 

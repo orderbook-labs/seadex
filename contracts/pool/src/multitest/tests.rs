@@ -1,12 +1,18 @@
 #[cfg(test)]
 mod test {
 
-    use cosmwasm_std::{coin, coins};
+    use cosmwasm_std::{coin, coins, from_binary, Decimal};
+    use sei_cosmwasm::{GetOrdersResponse, OrderType, PositionDirection};
     use sei_integration_tests::helper::{get_balance, mock_app};
 
-    use crate::multitest::{
-        alice, bob, charlie, init_default_balances, query_balances, PoolCodeId, ATOM_DENOM,
-        SEI_DENOM, USDT_DENOM,
+    use crate::{
+        contract::SEI_DEX_CONTRACT_ADDR,
+        msg::QueryMsg,
+        multitest::{
+            alice, bob, charlie, init_default_balances, place_orders, query_balances, PoolCodeId,
+            ATOM_DENOM, SEI_DENOM, USDT_DENOM,
+        },
+        SeiOrder,
     };
 
     #[test]
@@ -101,22 +107,58 @@ mod test {
         let nominal = 1u128;
         let funds = coins(10000, SEI_DENOM);
 
-        let resp = contract
-            .limit_bid(
-                &mut app,
-                &alice(),
-                price,
-                quantity,
-                leverage,
-                position_effect,
-                status_description,
-                nominal,
-                funds.as_slice(),
-            );
-        println!("resp: {:?}", resp);
+        let price_denom = SEI_DENOM;
+        let asset_denom = ATOM_DENOM;
+        let order_type = OrderType::Limit;
+        let data = "".to_string();
+        let position_direction = PositionDirection::Long;
+        let status_description = "order1".to_string();
+        let dex_contract_addr = SEI_DEX_CONTRACT_ADDR;
 
-        let bids = contract.query_limit_bids(&app).unwrap().bids;
-        assert_eq!(bids.len(), 1);
-        
+        // let resp = contract.limit_bid(
+        //     &mut app,
+        //     &alice(),
+        //     price,
+        //     quantity,
+        //     leverage,
+        //     position_effect,
+        //     status_description,
+        //     nominal,
+        //     funds.as_slice(),
+        // );
+        // println!("resp: {:?}", resp);
+        let orders = vec![SeiOrder {
+            price: Decimal::raw(price),
+            quantity: Decimal::raw(quantity),
+            price_denom: price_denom.to_owned(),
+            asset_denom: asset_denom.to_owned(),
+            order_type,
+            position_direction,
+            data, // serialized order data, defined by the specific target contract
+            status_description,
+            nominal: Decimal::raw(nominal),
+        }];
+
+        let resps = place_orders(&mut app, &charlie(), orders, funds, dex_contract_addr).unwrap();
+        let res = resps.first().unwrap().clone().data;
+        let data = res.unwrap();
+        let out: String = from_binary(&data).unwrap();
+        assert_eq!(out.to_string(), dex_contract_addr.to_string());
+
+        // let bids = contract.query_limit_bids(&app).unwrap().bids;
+        // assert_eq!(bids.len(), 1);
+
+        let resp: GetOrdersResponse = app
+            .wrap()
+            .query_wasm_smart(
+                contract.addr(),
+                &QueryMsg::GetOrders {
+                    contract_addr: SEI_DEX_CONTRACT_ADDR.to_string(),
+                    account: contract.addr().to_string(),
+                },
+            )
+            .unwrap();
+        let orders = resp.orders;
+        assert_eq!(orders.len(), 1);
     }
 }
