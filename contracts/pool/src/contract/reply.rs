@@ -1,4 +1,5 @@
-use cosmwasm_std::{DepsMut, Env, Reply, Response, StdError, SubMsgResponse};
+use cosmwasm_std::{from_binary, DepsMut, Env, Reply, Response, StdError, SubMsgResponse};
+use cw_utils::{parse_execute_response_data, parse_instantiate_response_data};
 use protobuf::Message;
 use sei_cosmwasm::{MsgPlaceOrdersResponse, SeiMsg, SeiQueryWrapper};
 
@@ -12,19 +13,36 @@ pub fn reply(
     reply: Reply,
 ) -> Result<Response<SeiMsg>, ContractError> {
     match reply.id {
-        PLACE_ORDER_REPLY_ID => Ok(handle_place_order_reply(deps, reply)?),
+        PLACE_ORDER_REPLY_ID => Ok(handle_place_order_reply(deps, reply.result.into_result())?),
         id => Err(ContractError::UnRecognizedReplyId { id }),
     }
 }
 
 pub fn handle_place_order_reply(
     deps: DepsMut<SeiQueryWrapper>,
-    reply: Reply,
+    reply: Result<SubMsgResponse, String>,
 ) -> Result<Response<SeiMsg>, StdError> {
     println!("reply is: {:?}", reply);
 
-    let submsg_response: SubMsgResponse =
-        reply.result.into_result().map_err(StdError::generic_err)?;
+    // let reply = reply.map_err(StdError::generic_err)?.data;
+
+    // let resp = reply.map(|data| parse_execute_response_data(&data)).transpose().unwrap();
+
+    // let resp = resp.map(|data| from_binary(&data.data.unwrap())).transpose()?;
+
+    // let resp: Option<Addr> = reply.map_err(StdError::generic_err)?
+    //     .data
+    //         .map(|data| parse_execute_response_data(&data))
+    //         .transpose()?
+    //         .and_then(|data| data.data)
+    //         .map(|data| from_binary(&data))
+    //         .transpose()
+    //         .map_err(Into::into)?;
+
+    // Ok(Response::new())
+    // todo!()
+
+    let submsg_response: SubMsgResponse = reply.map_err(StdError::generic_err)?;
 
     match submsg_response.data {
         Some(response_data) => {

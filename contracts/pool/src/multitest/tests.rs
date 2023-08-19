@@ -112,7 +112,7 @@ mod test {
         let order_type = OrderType::Limit;
         let data = "".to_string();
         let position_direction = PositionDirection::Long;
-        let status_description = "order1".to_string();
+        let status_description = "order1";
         let dex_contract_addr = SEI_DEX_CONTRACT_ADDR;
 
         // let resp = contract.limit_bid(
@@ -126,7 +126,9 @@ mod test {
         //     nominal,
         //     funds.as_slice(),
         // );
+
         // println!("resp: {:?}", resp);
+
         let orders = vec![SeiOrder {
             price: Decimal::raw(price),
             quantity: Decimal::raw(quantity),
@@ -135,7 +137,7 @@ mod test {
             order_type,
             position_direction,
             data, // serialized order data, defined by the specific target contract
-            status_description,
+            status_description: status_description.to_string(),
             nominal: Decimal::raw(nominal),
         }];
 
@@ -145,8 +147,8 @@ mod test {
         let out: String = from_binary(&data).unwrap();
         assert_eq!(out.to_string(), dex_contract_addr.to_string());
 
-        // let bids = contract.query_limit_bids(&app).unwrap().bids;
-        // assert_eq!(bids.len(), 1);
+        let bids = contract.query_limit_bids(&app).unwrap().bids;
+        assert_eq!(bids.len(), 1);
 
         let resp: GetOrdersResponse = app
             .wrap()

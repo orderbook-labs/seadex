@@ -1,4 +1,4 @@
-use cosmwasm_std::{Decimal, DepsMut, Env, MessageInfo, Response, StdResult, SubMsg};
+use cosmwasm_std::{CosmosMsg, Decimal, DepsMut, Env, MessageInfo, Response, StdResult, SubMsg};
 use cw_storage_plus::{Item, Map};
 use sei_cosmwasm::{OrderType, PositionDirection, SeiMsg};
 
@@ -139,7 +139,9 @@ fn limit_bid(
         Ok(orders)
     })?;
 
-    let sub_msg = SubMsg::reply_on_success(order_msg, PLACE_ORDER_REPLY_ID);
+    let msg = CosmosMsg::Custom(order_msg);
+    let sub_msg = SubMsg::reply_on_success(msg, PLACE_ORDER_REPLY_ID);
+    // let sub_msg = SubMsg::reply_on_success(order_msg, PLACE_ORDER_REPLY_ID);
 
     let resp = Response::new().add_submessage(sub_msg);
 
